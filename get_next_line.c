@@ -6,23 +6,24 @@
 /*   By: mmuhaise <mmuhaise@student.42beirut.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/20 15:58:54 by mmuhaise          #+#    #+#             */
-/*   Updated: 2024/06/24 21:59:53 by mmuhaise         ###   ########.fr       */
+/*   Updated: 2024/06/25 16:58:22 by mmuhaise         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "get_next_line.h"
 
-int	fill_buffer(int fd, char **buffer)
+ssize_t	fill_buffer(int fd, char **buffer)
 {
-	int	chars_read;
+	ssize_t	chars_read;
 
-	*buffer = (char *)malloc(BUFFER_SIZE + 1);
+	*buffer = (char *)malloc(BUFFER_SIZE + 1 * sizeof(char));
 	if (!*buffer)
 		return (-1);
 	chars_read = read(fd, *buffer, BUFFER_SIZE);
-	if (chars_read == -1)
+	if (chars_read <= 0 || fd < 0)
 	{
 		free(*buffer);
+		*buffer = NULL;
 		return (-1);
 	}
 	(*buffer)[chars_read] = '\0';
@@ -43,63 +44,86 @@ int	has_nl(char *str)
 	return (-1);
 }
 
-char	*get_next_line(int fd)
+char	*get_line_from_stash(char **stash)
 {
-	char		*next_line;
-	static char	*stash;
-	int			len;
-	char		*line;
-	char		*temp;
+	int		len;
+	char	*line;
+	char	*temp;
 
-	if (fd < 0 || BUFFER_SIZE <= 0)
-		return (NULL);
-	if (!stash)
-		stash = ft_strdup("");
-	while ((fill_buffer(fd, &next_line)) > 0)
+	len = has_nl(*stash);
+	if (len >= 0)
 	{
-		stash = ft_strjoin(stash, next_line);
-		free(next_line);
-		len = has_nl(stash);
-		if (len >= 0)
-		{
-			line = ft_substr(stash, 0, len);
-			temp = stash;
-			stash = ft_substr(stash, len + 1, strlen(stash) - len - 1);
-			free(temp);
-			return (line);
-		}
+		line = ft_substr(*stash, 0, len + 1);
+		temp = *stash;
+		*stash = ft_substr(*stash, len + 1, ft_strlen(*stash) - len - 1);
+		free(temp);
+		return (line);
 	}
-	if (strlen(stash) > 0)
+	if (ft_strlen(*stash) > 0)
 	{
-		line = ft_strdup(stash);
-		free(stash);
-		stash = NULL;
+		line = ft_strdup(*stash);
+		free(*stash);
+		*stash = NULL;
 		return (line);
 	}
 	return (NULL);
 }
 
-int	main(int argc, char **argv)
+void	read_and_append(int fd, char **stash)
 {
-	int		fd;
-	char	*line;
+	char	*next_line;
+	char	*temp;
 
-	if (argc != 2)
+	while (fill_buffer(fd, &next_line) > 0)
 	{
-		fprintf(stderr, "Usage: %s <filename>\n", argv[0]);
-		return (1);
+		temp = *stash;
+		*stash = ft_strjoin(*stash, next_line);
+		free(temp);
+		free(next_line);
+		if (has_nl(*stash) >= 0)
+			break ;
 	}
-	fd = open(argv[1], O_RDONLY);
-	if (fd < 0)
-	{
-		perror("Error opening file");
-		return (1);
-	}
-	while ((line = get_next_line(fd)) != NULL)
-	{
-		printf("Line read: %s\n", line);
-		free(line);
-	}
-	close(fd);
-	return (0);
 }
+
+char	*get_next_line(int fd)
+{
+	static char	*stash;
+	char		*line;
+
+	if (fd < 0 || BUFFER_SIZE <= 0)
+	{
+		free(stash);
+		stash = NULL;
+		return (NULL);
+	}
+	if (!stash)
+		stash = ft_strdup("");
+	read_and_append(fd, &stash);
+	line = get_line_from_stash(&stash);
+	return (line);
+}
+
+// int	main(int argc, char **argv)
+// {
+// 	int		fd;
+// 	char	*line;
+
+// 	if (argc != 2)
+// 	{
+// 		fprintf(stderr, "Usage: %s <filename>\n", argv[0]);
+// 		return (1);
+// 	}
+// 	fd = open(argv[1], O_RDONLY);
+// 	if (fd < 0)
+// 	{
+// 		perror("Error opening file");
+// 		return (1);
+// 	}
+// 	while ((line = get_next_line(fd)) != NULL)
+// 	{
+// 		printf("Line read: %s", line);
+// 		free(line);
+// 	}
+// 	close(fd);
+// 	return (0);
+// }

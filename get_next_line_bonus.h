@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   get_next_line_bonus.h                              :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: mmuhaise <mmuhaise@student.42.fr>          +#+  +:+       +#+        */
+/*   By: mmuhaise <mmuhaise@student.42beirut.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/20 23:28:31 by mmuhaise          #+#    #+#             */
-/*   Updated: 2024/06/21 00:11:43 by mmuhaise         ###   ########.fr       */
+/*   Updated: 2024/06/25 17:03:59 by mmuhaise         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,15 +28,10 @@ typedef struct s_list
 	struct s_list	*next;
 }	t_list;
 
-int		has_newline(t_list *list);
-t_list	*get_last_node(t_list *list);
-char	*extract_line(t_list *list);
-void	copy_to_buffer(t_list *list, char *buffer);
-int		get_length_to_newline(t_list *list);
-void	clean_list(t_list **list);
 char	*get_next_line(int fd);
-void	free_list(t_list **list, t_list *new_node);
-void	build_list(t_list **list, int fd);
-void	add_node(t_list **list, char *buf, int fd);
+char	*ft_strdup(const char *s);
+char	*ft_strjoin(char const *s1, char const *s2);
+size_t	ft_strlen(const char *s);
+char	*ft_substr(char const *s, unsigned int start, size_t len);
 
 #endif
